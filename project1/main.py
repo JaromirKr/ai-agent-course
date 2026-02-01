@@ -53,15 +53,14 @@ available_functions = {
     "evaluate_your_try": evaluate_your_try,
 }
 
-client = OpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
-
 class GameState(Enum):
     INIT = 0
     PLAYING = 1
     END = 2
 
 class OpenAIGuessGameAgent:
-    def __init__(self, model = "gpt-5-nano", max_tries=5):
+    def __init__(self, client, model = "gpt-5-nano", max_tries=5):
+        self.client = client
         self.model = model
         self.max_tries = max_tries
         self.state = GameState.INIT
@@ -107,7 +106,7 @@ class OpenAIGuessGameAgent:
         :param tools: The available tools for the LLM
         :return: True if successful, False otherwise
         """
-        response = client.chat.completions.create(
+        response = self.client.chat.completions.create(
             model=self.model,
             messages=self.messages,
             tools=tools
@@ -177,7 +176,19 @@ class OpenAIGuessGameAgent:
             raise Exception("Unexpected message from LLM during PLAYING state.")
 
 def main():
-    agent = OpenAIGuessGameAgent(max_tries=8)
+    api_key = os.environ.get("OPENAI_API_KEY")
+    if not api_key:
+        print("OPENAI_API_KEY environment variable not set.")
+        return
+
+    client = OpenAI(api_key=api_key)
+    try:
+        client.models.list()
+    except Exception as e:
+        print(f"Not connected to OpenAI: {e}")
+        return
+
+    agent = OpenAIGuessGameAgent(client, max_tries=5)
     agent.play()
 
 if __name__ == '__main__':
