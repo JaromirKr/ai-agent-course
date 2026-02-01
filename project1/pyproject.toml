@@ -1,0 +1,9 @@
+[project]
+name = "project1"
+version = "0.1.0"
+description = "Add your description here"
+requires-python = ">=3.14"
+dependencies = [
+    "openai>=1.66.3",
+    "python-dotenv>=1.0.1",
+]
